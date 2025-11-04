@@ -1,0 +1,6 @@
+.vscode/*
+obj_dir/*
+sim/*
+*.v
+*.vcd
+*.gtkw
