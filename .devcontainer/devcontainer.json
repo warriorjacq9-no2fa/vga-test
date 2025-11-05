@@ -1,0 +1,10 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/universal:latest",
+    "features": {
+    "ghcr.io/devcontainers/features/desktop-lite:1": {
+        "desktopEnv": "xfce"
+    }
+    },
+    "forwardPorts": [6080], // Port for noVNC
+    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y tightvncserver"
+}
