@@ -11,7 +11,7 @@ using namespace std;
 
 vector<unsigned char> pixels(WIDTH * HEIGHT * 3);
 
-Vtt_um_warriorjacq9* dut;
+VTOP_MODULE* dut;
 
 uint64_t main_time = 0;
 double sc_timestamp() {

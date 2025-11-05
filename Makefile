@@ -3,7 +3,7 @@ INCLUDES = -I../include
 
 # Compiler/linker flags
 LDFLAGS = -lGL -lglfw
-CPPFLAGS = -O2 -Wall -I../include
+CPPFLAGS = -O2 -Wall -I../include -DVTOP_MODULE=V$(TOP_MODULE)
 
 # Default rule
 all: args run
@@ -26,7 +26,7 @@ endif
 verilate:
 	verilator -Wall --cc --exe $(CPP_SRCS) $(INCLUDES) $(VERILOG_SRCS) \
 		--top-module $(TOP_MODULE) \
-		-LDFLAGS "$(LDFLAGS)" -CFLAGS "$(CPPFLAGS)" -DVTOP_MODULE=V$(TOP_MODULE)
+		-LDFLAGS "$(LDFLAGS)" -CFLAGS "$(CPPFLAGS)"
 
 # Step 2: Build the executable from generated makefile
 build: verilate

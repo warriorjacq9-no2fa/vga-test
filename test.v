@@ -61,6 +61,6 @@ module test (
 
     // Map to outputs
     assign uo_out  = {green, red};
-    assign uio_out = {vsync, hsync, blue};
+    assign uio_out = {2'b0, vsync, hsync, blue};
 
 endmodule
