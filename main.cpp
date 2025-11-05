@@ -39,7 +39,7 @@ void reset() {
 void vtb() {
     int x;
     int y;
-    dut = new Vtt_um_warriorjacq9;
+    dut = new VTOP_MODULE;
     
     reset();
     
