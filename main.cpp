@@ -37,8 +37,8 @@ void reset() {
 }
 
 void vtb() {
-    int x;
-    int y;
+    int x = 0;
+    int y = 0;
     dut = new VTOP_MODULE;
     
     reset();
@@ -48,21 +48,26 @@ void vtb() {
         tick();
 
         x++;
-        if(dut->uio_out & 0b00010000) { // HSYNC
+        if((dut->uio_out & 0b00010000)) { // HSYNC
             x = 0;
             y++;
+            //cout << "Newline" << endl;
         }
-        if(dut->uio_out & 0b00100000) // VSYNC
+        if((dut->uio_out & 0b00100000)){ // VSYNC
             y = 0;
+            cout << "Frame" << endl;
+        }
         
         char r = (dut->uo_out & 0b00001111) * 16;
         char g = (dut->uo_out & 0b11110000) * 16;
         char b = (dut->uio_out & 0b00001111) * 16;
         
-        int index = (y * WIDTH + x) * 3;
-        pixels[index + 0] = r;
-        pixels[index + 1] = g;
-        pixels[index + 2] = b;
+        if (x < WIDTH && y < HEIGHT) {
+            int index = (y * WIDTH + x) * 3;
+            pixels[index + 0] = r;
+            pixels[index + 1] = g;
+            pixels[index + 2] = b;
+        }
 
     }
     dut->final();
