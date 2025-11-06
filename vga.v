@@ -39,8 +39,8 @@ module vga
             y <= 0;
             de <= 0;
         end else begin
-            hsync <= ~hsync_next;
-            vsync <= ~vsync_next;
+            hsync <= hsync_next;
+            vsync <= vsync_next;
             x <= x_next;
             y <= y_next;
             de <= active_area_next;
@@ -50,8 +50,8 @@ module vga
     // combinational logic
     always @(*)
     begin
-        hsync_next = ACTIVE_WIDTH + H_FP < x && x < TOTAL_WIDTH - H_BP;
-        vsync_next = ACTIVE_HEIGHT + V_FP < y && y < TOTAL_HEIGHT - V_BP;
+        hsync_next = ~(ACTIVE_WIDTH + H_FP <= x && x < TOTAL_WIDTH - H_BP);
+        vsync_next = ~(ACTIVE_HEIGHT + V_FP <= y && y < TOTAL_HEIGHT - V_BP);
         
         if(x == TOTAL_WIDTH - 1)
         begin

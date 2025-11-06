@@ -26,6 +26,7 @@ void tick() {
 
     dut->clk = 0;
     dut->eval();
+    Verilated::flushCall();
 }
 
 void reset() {
@@ -45,7 +46,6 @@ void vtb() {
     
     while (!Verilated::gotFinish()) {
         tick();
-        tick();
 
         x++;
         if(!(dut->uio_out & 0b00010000)) { // HSYNC
@@ -58,10 +58,10 @@ void vtb() {
         }
         
         char r = (dut->uo_out & 0b00001111) * 0x11;
-        char g = (dut->uo_out & 0b11110000) * 0x11;
+        char g = ((dut->uo_out & 0b11110000) >> 4) * 0x11;
         char b = (dut->uio_out & 0b00001111) * 0x11;
         bool de = dut->uio_out & 0b01000000; // bit 6 we added above
-        if (x < WIDTH && y < HEIGHT) {
+        if (de && x < WIDTH && y < HEIGHT) {
             int index = (y * WIDTH + x) * 3;
             pixels[index + 0] = r;
             pixels[index + 1] = g;
@@ -77,7 +77,8 @@ int main(int argc, char** args) {
     int gl_done;
 	thread thread(displayRun, &pixels, &gl_done);
 
-    while(!gl_done);
+    while(!gl_done)
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     Verilated::commandArgs(argc, args);
 
