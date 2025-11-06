@@ -34,13 +34,16 @@ module test (
 
 
     /* verilator lint_off LATCH */
+    reg[11:0] tr, tg;
     always @(*) begin // Display logic
+        tr = (x * 15 / 639);
+        tg = (y * 15 / 479);
         if(de == 1) begin
-            r = 4'hF;
-            g = 4'hE;
-            b = 4'hD;
+            r = tr[3:0];
+            g = tg[3:0];
+            b = 15 - r;
         end
     end
 
-    wire _unused = &{ui_in, uio_in, ena, x, y, 1'b0};
+    wire _unused = &{ui_in, uio_in, ena, x, y, tr[11:4], tg[11:4], 1'b0};
 endmodule

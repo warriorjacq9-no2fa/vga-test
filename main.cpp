@@ -40,6 +40,8 @@ void reset() {
 void vtb() {
     int x = 0;
     int y = 0;
+    bool last_hsync = true;
+    bool last_vsync = true;
     dut = new VTOP_MODULE;
     
     reset();
@@ -47,26 +49,34 @@ void vtb() {
     while (!Verilated::gotFinish()) {
         tick();
 
-        x++;
-        if(!(dut->uio_out & 0b00010000)) { // HSYNC
+        bool hsync = dut->uio_out & 0b00010000;
+        bool vsync = dut->uio_out & 0b00100000;
+        bool de    = dut->uio_out & 0b01000000;
+
+        // Detect rising edges of syncs
+        if (!last_hsync && hsync) {
             x = 0;
             y++;
-            //cout << "Newline" << endl;
         }
-        if(!(dut->uio_out & 0b00100000)){ // VSYNC
+        if (!last_vsync && vsync) {
             y = 0;
         }
-        
-        char r = (dut->uo_out & 0b00001111) * 0x11;
-        char g = ((dut->uo_out & 0b11110000) >> 4) * 0x11;
-        char b = (dut->uio_out & 0b00001111) * 0x11;
-        bool de = dut->uio_out & 0b01000000; // bit 6 we added above
+
+        last_hsync = hsync;
+        last_vsync = vsync;
+
         if (de && x < WIDTH && y < HEIGHT) {
+            char r = (dut->uo_out & 0b00001111) * 0x11;
+            char g = ((dut->uo_out & 0b11110000) >> 4) * 0x11;
+            char b = (dut->uio_out & 0b00001111) * 0x11;
+
             int index = (y * WIDTH + x) * 3;
             pixels[index + 0] = r;
             pixels[index + 1] = g;
             pixels[index + 2] = b;
         }
+        x++;
+        if (x >= WIDTH) x = WIDTH - 1;
 
     }
     dut->final();
