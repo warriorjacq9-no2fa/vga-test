@@ -5,18 +5,14 @@ INCLUDES = -I../include
 LDFLAGS = -lGL -lglfw
 CPPFLAGS = -O2 -Wall -I../include -DVTOP_MODULE=V$(TOP_MODULE)
 
+VERILOG_SRCS?=$(TOP_MODULE)
+
 # Default rule
 all: args run
 
 args:
 ifeq ($(strip $(TOP_MODULE)),)
 	@echo "Error: TOP_MODULE not set." >&2
-	@echo "Syntax: make TOP_MODULE=<top module> VERILOG_SRCS=<full path to srcs>" >&2
-	@exit 1
-endif
-
-ifeq ($(strip $(VERILOG_SRCS)),)
-	@echo "Error: VERILOG_SRCS not set." >&2
 	@echo "Syntax: make TOP_MODULE=<top module> VERILOG_SRCS=<full path to srcs>" >&2
 	@exit 1
 endif

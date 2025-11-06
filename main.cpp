@@ -48,20 +48,19 @@ void vtb() {
         tick();
 
         x++;
-        if((dut->uio_out & 0b00010000)) { // HSYNC
+        if(!(dut->uio_out & 0b00010000)) { // HSYNC
             x = 0;
             y++;
             //cout << "Newline" << endl;
         }
-        if((dut->uio_out & 0b00100000)){ // VSYNC
+        if(!(dut->uio_out & 0b00100000)){ // VSYNC
             y = 0;
-            cout << "Frame" << endl;
         }
         
-        char r = (dut->uo_out & 0b00001111) * 16;
-        char g = (dut->uo_out & 0b11110000) * 16;
-        char b = (dut->uio_out & 0b00001111) * 16;
-        
+        char r = (dut->uo_out & 0b00001111) * 0x11;
+        char g = (dut->uo_out & 0b11110000) * 0x11;
+        char b = (dut->uio_out & 0b00001111) * 0x11;
+        bool de = dut->uio_out & 0b01000000; // bit 6 we added above
         if (x < WIDTH && y < HEIGHT) {
             int index = (y * WIDTH + x) * 3;
             pixels[index + 0] = r;

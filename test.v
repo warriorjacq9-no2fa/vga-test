@@ -1,5 +1,3 @@
-/* verilator lint_off UNUSEDSIGNAL */
-/* verilator lint_off DECLFILENAME */
 module test (
   input  wire [7:0] ui_in,    // Dedicated inputs
   output wire [7:0] uo_out,   // Dedicated outputs
@@ -10,106 +8,39 @@ module test (
   input  wire       clk,      // clock
   input  wire       rst_n     // reset_n - low to reset
 );
-// VGA signals
-  wire hsync;
-  wire vsync;
-  wire [1:0] R;
-  wire [1:0] G;
-  wire [1:0] B;
-  wire video_active;
-  wire [9:0] pix_x;
-  wire [9:0] pix_y;
-  wire sound;
 
-  // TinyVGA PMOD
-  assign uo_out = {G[1:0], 2'b0, R[1:0], 2'b0};
-  assign uio_out = {2'b0, vsync, hsync, B[1:0], 2'b0};
+    assign uio_oe = 8'b0;
 
-  // Unused outputs assigned to 0.
-  assign uio_oe  = 0;
+    reg [3:0] r, g, b;
+    wire [10:0] x, y;
+    wire de;
+    wire hsync, vsync;
 
-  // Suppress unused signals warning
-  wire _unused_ok = &{ena, ui_in, uio_in};
+    assign uo_out[7:0] = {g[3:0], r[3:0]};
+    assign uio_out[3:0] = b[3:0];
+    assign uio_out[7:4] = {1'b0, de, vsync, hsync};
 
-  reg [9:0] counter;
 
-  hvsync_generator hvsync_gen(
-    .clk(clk),
-    .reset(~rst_n),
-    .hsync(hsync),
-    .vsync(vsync),
-    .display_on(video_active),
-    .hpos(pix_x),
-    .vpos(pix_y)
-  );
-  
-  wire [9:0] moving_x = pix_x + counter;
+    // ******************** GRAPHICS ********************
+    vga vga (
+	    .clk(clk), 
+	    .hsync(hsync),
+		.vsync(vsync),
+		.x(x),
+		.y(y),
+		.de(de),
+        .rst_n(rst_n)
+	);
 
-  assign R = video_active ? {moving_x[5], pix_y[2]} : 2'b00;
-  assign G = video_active ? {moving_x[6], pix_y[2]} : 2'b00;
-  assign B = video_active ? {moving_x[7], pix_y[5]} : 2'b00;
-  
-  always @(posedge vsync, negedge rst_n) begin
-    if (~rst_n) begin
-      counter <= 0;
-    end else begin
-      counter <= counter + 1;
+
+    /* verilator lint_off LATCH */
+    always @(*) begin // Display logic
+        if(de == 1) begin
+            r = 4'hF;
+            g = 4'hE;
+            b = 4'hD;
+        end
     end
-  end
-endmodule
-module hvsync_generator(clk, reset, hsync, vsync, display_on, hpos, vpos);
 
-  input clk;
-  input reset;
-  output reg hsync, vsync;
-  output display_on;
-  output reg [9:0] hpos;
-  output reg [9:0] vpos;
-
-  // declarations for TV-simulator sync parameters
-  // horizontal constants
-  parameter H_DISPLAY       = 640; // horizontal display width
-  parameter H_BACK          =  48; // horizontal left border (back porch)
-  parameter H_FRONT         =  16; // horizontal right border (front porch)
-  parameter H_SYNC          =  96; // horizontal sync width
-  // vertical constants
-  parameter V_DISPLAY       = 480; // vertical display height
-  parameter V_TOP           =  33; // vertical top border
-  parameter V_BOTTOM        =  10; // vertical bottom border
-  parameter V_SYNC          =   2; // vertical sync # lines
-  // derived constants
-  parameter H_SYNC_START    = H_DISPLAY + H_FRONT;
-  parameter H_SYNC_END      = H_DISPLAY + H_FRONT + H_SYNC - 1;
-  parameter H_MAX           = H_DISPLAY + H_BACK + H_FRONT + H_SYNC - 1;
-  parameter V_SYNC_START    = V_DISPLAY + V_BOTTOM;
-  parameter V_SYNC_END      = V_DISPLAY + V_BOTTOM + V_SYNC - 1;
-  parameter V_MAX           = V_DISPLAY + V_TOP + V_BOTTOM + V_SYNC - 1;
-
-  wire hmaxxed = (hpos == H_MAX) || reset;	// set when hpos is maximum
-  wire vmaxxed = (vpos == V_MAX) || reset;	// set when vpos is maximum
-  
-  // horizontal position counter
-  always @(posedge clk)
-  begin
-    hsync <= (hpos>=H_SYNC_START && hpos<=H_SYNC_END);
-    if(hmaxxed)
-      hpos <= 0;
-    else
-      hpos <= hpos + 1;
-  end
-
-  // vertical position counter
-  always @(posedge clk)
-  begin
-    vsync <= (vpos>=V_SYNC_START && vpos<=V_SYNC_END);
-    if(hmaxxed)
-      if (vmaxxed)
-        vpos <= 0;
-      else
-        vpos <= vpos + 1;
-  end
-  
-  // display_on is set when beam is in "safe" visible frame
-  assign display_on = (hpos<H_DISPLAY) && (vpos<V_DISPLAY);
-
+    wire _unused = &{ui_in, uio_in, ena, x, y, 1'b0};
 endmodule
