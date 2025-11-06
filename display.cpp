@@ -150,5 +150,5 @@ int displayRun(std::vector<unsigned char>* pixels, int* gl_done)
     glfwDestroyWindow(window);
     glfwTerminate();
 
-    return 0;
+    exit(0);
 }
