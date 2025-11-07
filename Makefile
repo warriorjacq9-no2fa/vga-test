@@ -3,7 +3,7 @@ INCLUDES = -I../include
 
 # Compiler/linker flags
 LDFLAGS = -lGL -lglfw
-CPPFLAGS = -O2 -Wall -I../include -DVTOP_MODULE=V$(TOP_MODULE)
+CPPFLAGS = -O2 -Wall -I../include -DVTOP_MODULE=V$(TOP_MODULE) -std=c++20
 
 VERILOG_SRCS?=$(TOP_MODULE)
 

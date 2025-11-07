@@ -10,6 +10,7 @@
 using namespace std;
 
 vector<unsigned char> pixels(WIDTH * HEIGHT * 3);
+bool texUpdate;
 
 VTOP_MODULE* dut;
 
@@ -60,6 +61,7 @@ void vtb() {
         }
         if (!last_vsync && vsync) {
             y = 0;
+            texUpdate = true;
         }
 
         last_hsync = hsync;
@@ -85,7 +87,8 @@ void vtb() {
 
 int main(int argc, char** args) {
     int gl_done;
-	thread thread(displayRun, &pixels, &gl_done);
+    texUpdate = false;
+	thread thread(displayRun, &pixels, &gl_done, &texUpdate);
 
     while(!gl_done)
         std::this_thread::sleep_for(std::chrono::milliseconds(10));

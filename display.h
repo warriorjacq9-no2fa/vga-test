@@ -5,5 +5,5 @@
 #define WIDTH 800
 #define HEIGHT 525
 
-int displayRun(std::vector<unsigned char>* pixels, int* gl_done);
+int displayRun(std::vector<unsigned char>* pixels, int* gl_done, bool* texUpdate);
 #endif

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include "display.h"
+#include <cstring>
 
 // Vertex shader for textured quad
 const char* vertexShaderSource = R"(
@@ -34,7 +35,7 @@ void glfwErrorCallback(int error, const char* description) {
     std::cerr << "GLFW Error " << error << ": " << description << std::endl;
 }
 
-int displayRun(std::vector<unsigned char>* pixels, int* gl_done)
+int displayRun(std::vector<unsigned char>* pixels, int* gl_done, bool* texUpdate)
 {
     *gl_done = 0;
     glfwSetErrorCallback(glfwErrorCallback);
@@ -57,6 +58,7 @@ int displayRun(std::vector<unsigned char>* pixels, int* gl_done)
     }
 
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(0);
 
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -121,24 +123,79 @@ int displayRun(std::vector<unsigned char>* pixels, int* gl_done)
 
     *gl_done = 1;
 
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glUseProgram(shaderProgram);
+    glBindVertexArray(VAO);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    GLuint pboIds[2];
+    glGenBuffers(2, pboIds);
+
+    for (int i = 0; i < 2; i++) {
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboIds[i]);
+        glBufferData(GL_PIXEL_UNPACK_BUFFER, WIDTH * HEIGHT * 3, nullptr, GL_DYNAMIC_DRAW);
+    }
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
+    int index = 0, nextIndex = 0;
+
+    // Frame info inits
+    double previousTime = glfwGetTime();
+    int frameCount = 0;
+    int fcModel = 0;
+    char* s = new char[45];
+
     // Main loop
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+        double currentTime = glfwGetTime();
+        double deltaTime = currentTime - previousTime;
+        frameCount++;
+
+        if (deltaTime >= 1.0) {
+            int fps = frameCount / deltaTime;
+            snprintf(s, 45, "VGA Testbench | %d FPS (%d model)",
+                fps, (int)(fcModel / deltaTime)
+            );
+            glfwSetWindowTitle(window, s);
+
+            frameCount = 0;
+            fcModel = 0;
+            previousTime = currentTime;
+        }
 
         // Clear screen
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+        if(*texUpdate) {
+            fcModel++;
+            *texUpdate = false;
+            // Bind the PBO you’ll update from CPU side
+            glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboIds[index]);
 
-        // Update texture (optional)
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WIDTH, HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
+            // Map buffer to write new pixels
+            glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, WIDTH * HEIGHT * 3, pixels->data());
 
+            // Bind the other PBO for texture upload
+            glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboIds[index]);
+            void* ptr = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, WIDTH * HEIGHT * 3,
+                                        GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+            if (ptr) {
+                memcpy(ptr, pixels->data(), WIDTH * HEIGHT * 3);
+                glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+            }
+
+            glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboIds[nextIndex]);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WIDTH, HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, 0);
+
+            // Unbind PBO
+            glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+            index = (index + 1) % 2;
+            nextIndex = (index + 1) % 2;
+        }
         // Draw
-        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
-        glBindTexture(GL_TEXTURE_2D, texture);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-
         glfwSwapBuffers(window);
+
     }
 
     // Cleanup
@@ -149,6 +206,8 @@ int displayRun(std::vector<unsigned char>* pixels, int* gl_done)
 
     glfwDestroyWindow(window);
     glfwTerminate();
+
+    delete[] s;
 
     exit(0);
 }

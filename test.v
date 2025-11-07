@@ -15,6 +15,8 @@ module test (
     wire [10:0] x, y;
     wire de;
     wire hsync, vsync;
+    reg [10:0] counter;
+    wire [10:0] x_mov = counter + x;
 
     assign uo_out[7:0] = {g[3:0], r[3:0]};
     assign uio_out[3:0] = b[3:0];
@@ -36,13 +38,20 @@ module test (
     /* verilator lint_off LATCH */
     reg[11:0] tr, tg;
     always @(*) begin // Display logic
-        tr = (x * 15 / 639);
+        tr = (x_mov * 15 / 639);
         tg = (y * 15 / 479);
         if(de == 1) begin
             r = tr[3:0];
             g = tg[3:0];
             b = 15 - r;
         end
+    end
+
+    always @(posedge vsync or negedge rst_n) begin
+            if(~rst_n) begin
+                counter <= 0;
+            end
+            counter <= counter + 1;
     end
 
     wire _unused = &{ui_in, uio_in, ena, x, y, tr[11:4], tg[11:4], 1'b0};
