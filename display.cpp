@@ -4,6 +4,11 @@
 #include <vector>
 #include "display.h"
 #include <cstring>
+#include <mutex>
+#include <condition_variable>
+
+extern std::mutex mtx;
+extern std::condition_variable cv;
 
 // Vertex shader for textured quad
 const char* vertexShaderSource = R"(
@@ -35,9 +40,8 @@ void glfwErrorCallback(int error, const char* description) {
     std::cerr << "GLFW Error " << error << ": " << description << std::endl;
 }
 
-int displayRun(std::vector<unsigned char>* pixels, int* gl_done, bool* texUpdate)
+int displayRun(std::vector<unsigned char>* pixels, bool* gl_done, bool* texUpdate)
 {
-    *gl_done = 0;
     glfwSetErrorCallback(glfwErrorCallback);
 
     // Initialize GLFW
@@ -121,8 +125,6 @@ int displayRun(std::vector<unsigned char>* pixels, int* gl_done, bool* texUpdate
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    *gl_done = 1;
-
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
@@ -145,6 +147,12 @@ int displayRun(std::vector<unsigned char>* pixels, int* gl_done, bool* texUpdate
     int fcModel = 0;
     char* s = new char[45];
 
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        *gl_done = true;
+    }
+    cv.notify_one();
+
     // Main loop
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -154,8 +162,8 @@ int displayRun(std::vector<unsigned char>* pixels, int* gl_done, bool* texUpdate
 
         if (deltaTime >= 1.0) {
             int fps = frameCount / deltaTime;
-            snprintf(s, 45, "VGA Testbench | %d FPS (%d model)",
-                fps, (int)(fcModel / deltaTime)
+            snprintf(s, 45, "VGA Testbench | %d FPS (%d window)",
+                (int)(fcModel / deltaTime), fps
             );
             glfwSetWindowTitle(window, s);
 
