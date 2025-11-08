@@ -9,7 +9,7 @@
 
 using namespace std;
 
-vector<unsigned char> pixels(WIDTH * HEIGHT * 3);
+vector<unsigned char> pixels(WIDTH * HEIGHT * 4);
 bool texUpdate;
 
 VTOP_MODULE* dut;
@@ -55,11 +55,11 @@ void vtb() {
         bool de    = dut->uio_out & 0b01000000;
 
         // Detect rising edges of syncs
-        if (!last_hsync && hsync) {
+        if (last_hsync && !hsync) {
             x = 0;
             y++;
         }
-        if (!last_vsync && vsync) {
+        if (last_vsync && !vsync) {
             y = 0;
             texUpdate = true;
         }
@@ -67,15 +67,19 @@ void vtb() {
         last_hsync = hsync;
         last_vsync = vsync;
 
-        if (de && x < WIDTH && y < HEIGHT) {
-            char r = (dut->uo_out & 0b00001111) * 0x11;
-            char g = ((dut->uo_out & 0b11110000) >> 4) * 0x11;
-            char b = (dut->uio_out & 0b00001111) * 0x11;
+        if (x < WIDTH && y < HEIGHT) {
+            char r = 0, g = 0, b = 0;
+            if(de) {
+                r = (dut->uo_out & 0b00001111) * 0x11;
+                g = ((dut->uo_out & 0b11110000) >> 4) * 0x11;
+                b = (dut->uio_out & 0b00001111) * 0x11;
+            }
 
-            int index = (y * WIDTH + x) * 3;
+            int index = (y * WIDTH + x) * 4;
             pixels[index + 0] = r;
             pixels[index + 1] = g;
             pixels[index + 2] = b;
+            pixels[index + 3] = 0xFF;
         }
         x++;
         if (x >= WIDTH) x = WIDTH - 1;

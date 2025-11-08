@@ -117,7 +117,7 @@ int displayRun(std::vector<unsigned char>* pixels, int* gl_done, bool* texUpdate
     GLuint texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels->data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -133,7 +133,7 @@ int displayRun(std::vector<unsigned char>* pixels, int* gl_done, bool* texUpdate
 
     for (int i = 0; i < 2; i++) {
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboIds[i]);
-        glBufferData(GL_PIXEL_UNPACK_BUFFER, WIDTH * HEIGHT * 3, nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_PIXEL_UNPACK_BUFFER, WIDTH * HEIGHT * 4, nullptr, GL_DYNAMIC_DRAW);
     }
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
@@ -173,19 +173,19 @@ int displayRun(std::vector<unsigned char>* pixels, int* gl_done, bool* texUpdate
             glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboIds[index]);
 
             // Map buffer to write new pixels
-            glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, WIDTH * HEIGHT * 3, pixels->data());
+            glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, WIDTH * HEIGHT * 4, pixels->data());
 
             // Bind the other PBO for texture upload
             glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboIds[index]);
-            void* ptr = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, WIDTH * HEIGHT * 3,
+            void* ptr = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, WIDTH * HEIGHT * 4,
                                         GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
             if (ptr) {
-                memcpy(ptr, pixels->data(), WIDTH * HEIGHT * 3);
+                memcpy(ptr, pixels->data(), WIDTH * HEIGHT * 4);
                 glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
             }
 
             glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboIds[nextIndex]);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WIDTH, HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, 0);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WIDTH, HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
             // Unbind PBO
             glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);

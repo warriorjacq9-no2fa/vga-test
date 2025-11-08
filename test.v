@@ -54,5 +54,5 @@ module test (
             counter <= counter + 1;
     end
 
-    wire _unused = &{ui_in, uio_in, ena, x, y, tr[11:4], tg[11:4], 1'b0};
+    wire _unused = &{ui_in, uio_in, ena, tr[11:4], tg[11:4], 1'b0};
 endmodule
