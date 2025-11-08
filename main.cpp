@@ -5,6 +5,11 @@
 #define S2(x) #x
 #define S(x) S2(x)
 #define HEADER(x) S(x.h)
+
+#ifndef VTOP_MODULE
+#define VTOP_MODULE Vtest
+#endif
+
 #include HEADER(VTOP_MODULE)
 
 using namespace std;
