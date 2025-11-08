@@ -19,20 +19,12 @@ bool texUpdate;
 
 VTOP_MODULE* dut;
 
-uint64_t main_time = 0;
-double sc_timestamp() {
-    return main_time;
-}
-
-void tick() {
-    main_time++;
-
+inline void tick() {
     dut->clk = 1;
     dut->eval();
 
     dut->clk = 0;
     dut->eval();
-    Verilated::flushCall();
 }
 
 void reset() {
@@ -80,14 +72,10 @@ void vtb() {
                 b = (dut->uio_out & 0b00001111) * 0x11;
             }
 
-            int index = (y * WIDTH + x) * 4;
-            pixels[index + 0] = r;
-            pixels[index + 1] = g;
-            pixels[index + 2] = b;
-            pixels[index + 3] = 0xFF;
+            unsigned char* p = &pixels[(y * WIDTH + x) * 4];
+            p[0] = r; p[1] = g; p[2] = b; p[3] = 0xFF;
         }
         x++;
-        if (x >= WIDTH) x = WIDTH - 1;
 
     }
     dut->final();
