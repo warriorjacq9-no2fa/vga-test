@@ -20,7 +20,7 @@ endif
 
 # Step 1: Run Verilator to generate C++ model + build Makefile
 verilate:
-	verilator -Wall --cc --exe $(CPP_SRCS) $(INCLUDES) $(VERILOG_SRCS) \
+	verilator -Wall --cc --exe $(CPP_SRCS) $(INCLUDES) $(VERILOG_SRCS) $(DEFINES) --bbox-unsup\
 		--top-module $(TOP_MODULE) \
 		-LDFLAGS "$(LDFLAGS)" -CFLAGS "$(CPPFLAGS)"
 
