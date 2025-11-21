@@ -36,6 +36,9 @@ static inline void tick() {
 }
 
 static inline void reset() {
+    dut->rst_n = 1;
+    dut->eval();
+    tick();
     dut->rst_n = 0;
     dut->clk = 0;
     dut->eval();
