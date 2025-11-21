@@ -43,7 +43,7 @@ static inline void reset() {
     dut->rst_n = 1;
 }
 
-inline uint8_t _4to8(uint8_t v) { return (v << 4) | v; }
+inline uint8_t _2to8(uint8_t v) { return (((v >> 3) & 0x02) | (v & 0x01)) * 0x55; }
 
 void vtb() {
     int x = 0;
@@ -51,9 +51,9 @@ void vtb() {
     bool last_hsync = true;
     bool last_vsync = true;
     
-    constexpr uint8_t HSYNC_MASK = 0b00010000;
-    constexpr uint8_t VSYNC_MASK = 0b00100000;
-    constexpr uint8_t DE_MASK    = 0b01000000;
+    constexpr uint8_t HSYNC_MASK = 0b10000000;
+    constexpr uint8_t VSYNC_MASK = 0b00001000;
+    constexpr uint8_t DE_MASK    = 0b10000000;
 
     dut = new VTOP_MODULE;
     
@@ -62,8 +62,8 @@ void vtb() {
     while (!Verilated::gotFinish()) {
         tick();
 
-        bool hsync = dut->uio_out & HSYNC_MASK;
-        bool vsync = dut->uio_out & VSYNC_MASK;
+        bool hsync = dut->uo_out & HSYNC_MASK;
+        bool vsync = dut->uo_out & VSYNC_MASK;
         bool de    = dut->uio_out & DE_MASK;
 
         // Detect rising edges of syncs
@@ -82,9 +82,9 @@ void vtb() {
         if (x < WIDTH && y < HEIGHT) {
             char r = 0, g = 0, b = 0;
             if(de) {
-                r = _4to8(dut->uo_out & 0b00001111);
-                g = _4to8((dut->uo_out & 0b11110000) >> 4);
-                b = _4to8(dut->uio_out & 0b00001111);
+                r = _2to8(dut->uo_out & 0b00010001);
+                g = _2to8((dut->uo_out & 0b00100010) >> 1);
+                b = _2to8((dut->uo_out & 0b01000100) >> 2);
             }
 
             unsigned char* p = &pixels[(y * WIDTH + x) * 4];
