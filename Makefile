@@ -13,7 +13,7 @@ all: args run
 args:
 ifeq ($(strip $(TOP_MODULE)),)
 	@echo "Error: TOP_MODULE not set." >&2
-	@echo "Syntax: make TOP_MODULE=<top module> VERILOG_SRCS=<full path to srcs>" >&2
+	@echo "Syntax: $(MAKE) TOP_MODULE=<top module> VERILOG_SRCS=<full path to srcs>" >&2
 	@exit 1
 endif
 
@@ -26,7 +26,7 @@ verilate:
 
 # Step 2: Build the executable from generated makefile
 build: verilate
-	make -j -C obj_dir -f V$(TOP_MODULE).mk V$(TOP_MODULE)
+	$(MAKE) -j -C obj_dir -f V$(TOP_MODULE).mk V$(TOP_MODULE)
 
 # Step 3: Run the simulation
 run: build
