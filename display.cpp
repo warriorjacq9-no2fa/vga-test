@@ -40,7 +40,7 @@ void glfwErrorCallback(int error, const char* description) {
     std::cerr << "GLFW Error " << error << ": " << description << std::endl;
 }
 
-int displayRun(std::vector<unsigned char>* pixels, bool* gl_done, bool* texUpdate)
+int displayRun(std::vector<unsigned char>* pixels, bool* gl_done, bool* texUpdate, GLFWkeyfun kbd)
 {
     glfwSetErrorCallback(glfwErrorCallback);
 
@@ -63,6 +63,8 @@ int displayRun(std::vector<unsigned char>* pixels, bool* gl_done, bool* texUpdat
 
     glfwMakeContextCurrent(window);
     glfwSwapInterval(0);
+
+    glfwSetKeyCallback(window, kbd);
 
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {

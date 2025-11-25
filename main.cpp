@@ -15,6 +15,18 @@
 std::condition_variable cv;
 std::mutex mtx;
 
+char keys;
+#define KSET(n) (keys |= 1 << n)
+#define KGET(n) (keys & 1 << n)
+#define KCLR(n) (keys &= ~(1 << n))
+
+#define KP1UP 0
+#define KP1DN 1
+#define KP1SRV 2
+#define KP2UP 3
+#define KP2DN 4
+#define KP2SRV 5
+
 bool gl_done = false;
 bool texUpdate = false;
 
@@ -60,8 +72,12 @@ void vtb() {
 
     dut = new VTOP_MODULE;
     
-    reset();
+    constexpr double frame_time = 1.0 / 30.0; // 30 FPS
+
+    auto frame_start = std::chrono::high_resolution_clock::now();
     
+    reset();
+
     while (!Verilated::gotFinish()) {
         tick();
 
@@ -70,13 +86,19 @@ void vtb() {
         bool de    = dut->uio_out & DE_MASK;
 
         // Detect rising edges of syncs
-        if (last_hsync && !hsync) {
+        if (!last_hsync && hsync) {
             x = 0;
             y++;
         }
-        if (last_vsync && !vsync) {
+        if (!last_vsync && vsync) {
             y = 0;
             texUpdate = true;
+            auto frame_end = std::chrono::high_resolution_clock::now();
+            auto elapsed = std::chrono::duration<double>(frame_end - frame_start).count();
+            if(elapsed < frame_time) {
+                std::this_thread::sleep_for(std::chrono::duration<double>(frame_time - elapsed));
+            }
+            frame_start = std::chrono::high_resolution_clock::now();
         }
 
         last_hsync = hsync;
@@ -95,15 +117,62 @@ void vtb() {
         }
         x++;
 
+        dut->ui_in = keys;
+
     }
     dut->final();
     delete dut;
 }
 
+void kbd(GLFWwindow *win, int key, int sc, int action, int mods) {
+    if(action == GLFW_PRESS) {
+        switch(key) {
+            case GLFW_KEY_W:
+                KSET(KP1UP);
+                break;
+            case GLFW_KEY_UP:
+                KSET(KP2UP);
+                break;
+            case GLFW_KEY_S:
+                KSET(KP1DN);
+                break;
+            case GLFW_KEY_DOWN:
+                KSET(KP2DN);
+                break;
+            case GLFW_KEY_Q:
+                KSET(KP1SRV);
+                break;
+            case GLFW_KEY_ENTER:
+                KSET(KP2SRV);
+                break;
+        }
+    } else if(action == GLFW_RELEASE) {
+        switch(key) {
+            case GLFW_KEY_W:
+                KCLR(KP1UP);
+                break;
+            case GLFW_KEY_UP:
+                KCLR(KP2UP);
+                break;
+            case GLFW_KEY_S:
+                KCLR(KP1DN);
+                break;
+            case GLFW_KEY_DOWN:
+                KCLR(KP2DN);
+                break;
+            case GLFW_KEY_Q:
+                KCLR(KP1SRV);
+                break;
+            case GLFW_KEY_ENTER:
+                KCLR(KP2SRV);
+                break;
+        }
+    }
+}
+
 int main(int argc, char** args) {
     texUpdate = false;
-	std::thread thread(displayRun, &pixels, &gl_done, &texUpdate);
-
+	std::thread thread(displayRun, &pixels, &gl_done, &texUpdate, kbd);
     wait_gl_done();
 
     Verilated::commandArgs(argc, args);
