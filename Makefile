@@ -13,20 +13,20 @@ all: args run
 args:
 ifeq ($(strip $(TOP_MODULE)),)
 	@echo "Error: TOP_MODULE not set." >&2
-	@echo "Syntax: $(MAKE) TOP_MODULE=<top module> VERILOG_SRCS=<full path to srcs>" >&2
+	@echo "Syntax: make TOP_MODULE=<top module> VERILOG_SRCS=<full path to srcs>" >&2
 	@exit 1
 endif
 
 
 # Step 1: Run Verilator to generate C++ model + build Makefile
 verilate:
-	verilator -Wall --cc --exe $(CPP_SRCS) $(INCLUDES) $(VERILOG_SRCS) $(DEFINES) --bbox-unsup\
+	verilator -Wall --cc --exe $(CPP_SRCS) $(INCLUDES) $(VERILOG_SRCS) -DVGA_TEST $(DEFINES) --bbox-unsup\
 		--top-module $(TOP_MODULE) \
 		-LDFLAGS "$(LDFLAGS)" -CFLAGS "$(CPPFLAGS)"
 
 # Step 2: Build the executable from generated makefile
 build: verilate
-	$(MAKE) -j -C obj_dir -f V$(TOP_MODULE).mk V$(TOP_MODULE)
+	make -j -C obj_dir -f V$(TOP_MODULE).mk V$(TOP_MODULE)
 
 # Step 3: Run the simulation
 run: build
