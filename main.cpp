@@ -68,7 +68,7 @@ void vtb() {
     
     constexpr uint8_t HSYNC_MASK = 0b10000000;
     constexpr uint8_t VSYNC_MASK = 0b00001000;
-    constexpr uint8_t DE_MASK    = 0b10000000;
+    constexpr uint8_t DE_MASK    = 0b00000001;
 
     dut = new VTOP_MODULE;
     
