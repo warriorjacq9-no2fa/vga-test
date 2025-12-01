@@ -1,8 +1,8 @@
-CPP_SRCS = main.cpp display.cpp glad.c
+CPP_SRCS = main.cpp display.cpp glad.c pa_ringbuffer.c
 INCLUDES = -I../include
 
 # Compiler/linker flags
-LDFLAGS += -lGL -lglfw
+LDFLAGS += -pthread -lGL -lglfw -lportaudio -lpthread
 CPPFLAGS += $(DEFINES) -Ofast -march=native -flto -Wall -I../include -DVTOP_MODULE=V$(TOP_MODULE)
 
 VERILOG_SRCS?=$(TOP_MODULE)
